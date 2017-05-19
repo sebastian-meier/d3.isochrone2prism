@@ -335,6 +335,7 @@
     })
 
     d3.selectAll('ul li a').on('click', function(){
+
       d3.select('#msg').text('Please wait...')
       d3.select('#btn-search').style('display','none')
       d3.select('#search').attr('value',defaults[d3.select(this).attr('data-city')].search)
@@ -829,13 +830,18 @@
     }
 
     d3.select('#btn-search').on('click', function(){
-      d3.select('#msg').text('Please wait...')
-      d3.select('#btn-search').style('display','none')
-      d3.json("https://geocoder.cit.api.here.com/6.2/geocode.json?app_id=LpORmPBDKz0oa7gPSYQH&app_code=lG6hn9AeJR05cP8SO1yURg&gen=9&locationattributes=timeZone&searchtext="+encodeURI(document.getElementById("search").value), function(err, data){
-        if(err) console.log(err)
-        var pos = data.Response.View[0].Result[0].Location.DisplayPosition
-        getIsoline({latitude:pos.Latitude,longitude:pos.Longitude,offset:(data.Response.View[0].Result[0].Location.AdminInfo.TimeZone.offset/(60*60))})
-      })
+      var searchword = document.getElementById("search").value;
+      if(searchword.length<2){
+        alert('Please select one of the examples or enter your own location.')
+      }else{
+        d3.select('#msg').text('Please wait...')
+        d3.select('#btn-search').style('display','none')
+        d3.json("https://geocoder.cit.api.here.com/6.2/geocode.json?app_id=LpORmPBDKz0oa7gPSYQH&app_code=lG6hn9AeJR05cP8SO1yURg&gen=9&locationattributes=timeZone&searchtext="+encodeURI(document.getElementById("search").value), function(err, data){
+          if(err) console.log(err)
+          var pos = data.Response.View[0].Result[0].Location.DisplayPosition
+          getIsoline({latitude:pos.Latitude,longitude:pos.Longitude,offset:(data.Response.View[0].Result[0].Location.AdminInfo.TimeZone.offset/(60*60))})
+        })
+      }
     })
 
     //https://isoline.route.cit.api.here.com/routing/7.2/calculateisoline.json?app_id=LpORmPBDKz0oa7gPSYQH&app_code=lG6hn9AeJR05cP8SO1yURg&mode=shortest;car;traffic:enabled&start=geo!52.51578,13.37749&range=4000&rangetype=time&departure=2017-05-15T12:00:00+02
