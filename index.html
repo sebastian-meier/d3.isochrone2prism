@@ -748,6 +748,8 @@
 
       if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
+      d3.select('canvas').remove()
+
       var container = document.getElementById( 'threejs' );
 
       var camera = new THREE.PerspectiveCamera( 20, 500 / 500, 1, 10000 );
