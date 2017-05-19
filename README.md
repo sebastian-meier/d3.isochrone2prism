@@ -6,7 +6,7 @@ In the 1960/70s Torsten Hägerstrand established what is today know as time(-spa
 
 ![Hägerstrand's space time prisms](https://github.com/sebastian-meier/d3.isochrone2prism/raw/master/img/Haegerstrand.jpg)
 
-The interactive exploration is available here: sebastian-meier.github.io/d3.isochrone2prism
+The interactive exploration is available here: http://sebastian-meier.github.io/d3.isochrone2prism
 
 Hägerstrand, T. (1970). What about People in Regional Science? Regional Sciences, 24(1):7–24.
 
