@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title></title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,800" rel="stylesheet">
+  <style>
+    body,html{
+      margin:0;
+      padding:0;
+      font-family: 'Open Sans', sans-serif;
+      font-weight:400;
+      font-size:10px;
+    }
+
+    #wrapper{
+      max-width: 90%;
+      margin:0 auto;
+    }
+
+    #intro, #menu, #vis{
+      max-width:700px;
+      margin:0 auto;
+    }
+
+    #menu{
+      padding-top:50px;
+    }
+
+    #vis{
+      clear:both;
+    }
+
+    #msg{
+      text-align: center;
+      font-weight:800;
+      font-size:16px;
+      padding: 20px 0 20px;
+      height:60px;
+    }
+
+    h1{
+      font-size:30px;
+      font-weight:800;
+      margin:20px 0 0 0;
+      padding:0;
+    }
+
+    h2, h3{
+      font-size:20px;
+      font-weight:400;
+      margin:0;
+      padding:0;
+    }
+
+    h4{
+      font-size:20px;
+      font-weight:800;
+      margin:0;
+      padding:0; 
+    }
+
+    img{
+      display: block;
+      margin:0 auto;
+      max-width: 100%;
+    }
+
+    p{
+      font-size:16px;
+    }
+
+    label{
+      display: block;
+      clear:both;
+      font-size:12px;
+      padding-bottom:4px;
+    }
+
+    #examples ul, #examples li{
+      list-style: none;
+      margin:0;
+      padding:0;
+      float:left;
+      font-size:12px;
+      text-decoration: underline;
+    }
+
+    #examples li{
+      margin-right:15px;
+    }
+
+    section{
+      padding-top:20px;
+      clear:both;
+    }
+
+    .form-line{
+      display: block;
+      float:left;
+      margin-right:20px;
+    }
+
+    #btn-search, #threedmenu a{
+      clear: both;
+      font-size:12px;
+      padding:10px;
+      margin-top:20px;
+      float:left;
+      background:#fff;
+      border-radius: 4px;
+      border: 2px solid rgba(0,0,0,0.5);
+    }
+
+    #btn-search:hover, #threedmenu a:hover{
+      cursor:pointer;
+      background:rgba(0,0,0,0.5);
+      color:#fff;
+    }
+
+    span.caption{
+      display: block;
+      text-align:center;
+      font-size:12px;
+    }
+
+    path.map{
+      stroke:rgba(0,0,0,1);
+      fill:rgba(0,0,0,0.1);
+    }
+
+    circle.center{
+      fill:red;
+      stroke:black;
+    }
+
+    #map{
+      width:100%;
+      height:500px;
+    }
+
+    #threedcontainer{
+      display: block;
+      width: 500px;
+      height: 500px;
+      max-width: 100%;
+      clear:both;
+    }
+
+    #threedcontainer svg{
+      position: absolute;
+      transition: all 3s ease-in-out;
+      max-width: 90%;
+    }
+
+    #threedcontainer svg.active{
+      transform: translate3d(0,0,0) rotateX(0deg) !important;
+    }
+
+    textarea{
+      width:100%;
+      height:500px;
+    }
+
+    .explanations{
+      display: none;
+    }
+
+    svg{
+      max-width: 100%;
+    }
+
+    #threejs{
+      display: none;
+    }
+
+    #final{
+      width:500px;
+      height:500px;
+      max-width:100%;
+    }
+
+  </style>
+</head>
+<body>
+  <div id="wrapper">
+  <div id="intro">
+    <section>
+      <h1>Space-Time Prisms Revisited</h1>
+      <h2>Deriving Hägerstrand's space-time visualisations from mobility isochrones</h2>
+      <span class="author">by <a href="https://twitter.com/seb_meier">Sebastian Meier</a></span>
+      <p>In the 1960/70s Torsten Hägerstrand established what is today know as <a href="https://en.wikipedia.org/wiki/Time_geography">time(-space) geography</a>. In one of his influential papers, he illustrates the spatio-temporal action space of an individual through space-time prisms (Hägerstrand, 1970). The prisms span across a spatio-temporal coordinate-system, highlighting the space an individual can explore in a given timeframe. The area those prisms cover is influenced by so-called constraints, most importantly personal constraints. Personal constraints can be of biological nature, like age, but also as Hägerstrand says by "the tools [...] [the individuals] can command", in other words, if they, for example, use a car, bike or instead walk.</p>
+      <img src="./img/Haegerstrand.jpg" alt="Hägerstrand's space-time prisms" />
+      <span class="caption">Hägerstrand's space-time prisms</span>
+      <p>Hägerstrand's work presents a conceptual framework. The prisms are means of explaining this concept. But they are not built on data. The following visualisation experiments are a visual exploration of his space-time prism concept.</p>
+    </section>
+    <section>
+      <h3>References</h3>
+      <p>Hägerstrand, T. (1970). What about People in Regional Science? Regional Sciences, 24(1):7–24. <a href="http://courses.washington.edu/cee500/What%20about%20people%20in%20regional%20science.pdf">Download PDF</a></p>
+    </section>
+  </div>
+  <div id="menu">
+    <h4>From isochrones to space-time prisms</h4>
+    <p>In order to start please select one of the three example locations or use the search box to find your own location:</p>
+    <section id="examples">
+      <label>Example Locations</label>
+      <ul>
+        <li><a data-city="berlin">Berlin</a></li>
+        <li><a data-city="london">London</a></li>
+        <li><a data-city="newyork">New York</a></li>
+      </ul>
+    </section>
+    <section>
+      <div class="form-line">
+        <label for="search">Location (Address)</label>
+        <input type="text" id="search" value="" />
+      </div>
+      <div class="form-line">
+        <label for="timeframe">Minutes</label>
+        <input type="text" value="10" id="minutes" />
+      </div>
+      <div class="form-line">
+        <label for="transport-type">Transport Type</label>
+        <select id="transport-type">
+          <option value="car">Car</option>
+          <option value="pedestrian">Pedestrian</option>
+          <option value="pedestrian">Bicycle</option>
+          <option value="publicTransport">Public Transport</option>
+        </select>
+      </div>
+      <div class="form-line">
+        <label for="day">Day of the week</label>
+        <select id="day">
+          <option value="mon">Monday</option>
+          <option value="tue">Tuesday</option>
+          <option value="wed">Wednesday</option>
+          <option value="thu">Thursday</option>
+          <option value="fri">Friday</option>
+          <option value="sat">Saturday</option>
+          <option value="sun">Sunday</option>
+        </select>
+      </div>
+      <div class="form-line">
+        <label for="hour">Hour of the day</label>
+        <select id="hour">
+          <option value="00">00:00</option>
+          <option value="01">01:00</option>
+          <option value="02">02:00</option>
+          <option value="03">03:00</option>
+          <option value="04">04:00</option>
+          <option value="05">05:00</option>
+          <option value="06">06:00</option>
+          <option value="07">07:00</option>
+          <option value="08">08:00</option>
+          <option value="09">09:00</option>
+          <option value="10">10:00</option>
+          <option value="11">11:00</option>
+          <option value="12" selected="selected">12:00</option>
+          <option value="13">13:00</option>
+          <option value="14">14:00</option>
+          <option value="15">15:00</option>
+          <option value="16">16:00</option>
+          <option value="17">17:00</option>
+          <option value="18">18:00</option>
+          <option value="19">19:00</option>
+          <option value="20">20:00</option>
+          <option value="21">21:00</option>
+          <option value="22">22:00</option>
+          <option value="23">23:00</option>
+        </select>
+      </div>
+      <button id="btn-search">Start</button>
+    </section>
+  </div>
+  <div id="vis">
+    <div id="msg"></div>
+    <p class="explanations">A data-driven approach to visualising individual spatio-temporal action spaces are isochrones. The lines visualise how far an individual can (probably) go within a certain timeframe, depending on time of day and mode of transport.</p>
+    <div id="map"></div>
+    <p class="explanations">When we sample those isolines for several time intervals, we can use them to build a space-time prism.</p>
+    <div class="explanations" id="threedmenu"><a>Toggle</a></div>
+    <div id="threedcontainer"></div>
+    <p class="explanations">Hägerstrand's prisms assume a circular action space, which is obviously only possible if one stands in a flat empty field. For a more accurate representation, we need to map the actual distances an individual can reach. (Black indicates 100% of locations with a certain distance which can be reached in that timeframe to white 0%)</p>
+    <div id="container"></div>
+    <p class="explanations">Transferring those into a mesh, we can build ourselves a nice space-time prism.</p>
+    <div id="threejs"></div>
+    <div id="final"></div>
+    <p class="explanations">Similar to Hägerstrand's graphic at the beginning of this article, we can query more data for different transport modes and compare them. Below an example for a comparison of walking and driving a car.</p>
+    <div id="comparison"></div>
+    <p class="explanations">The map is built using <a href="http://leafletjs.com/">Leaflet</a>, most of the other things are built using <a href="https://d3js.org/">D3</a> only the mesh gradient is built by using <a href="https://threejs.org/">Three.js</a>.<br /><br />All source code is available on <a href="https://github.com/sebastian-meier/d3.isochrone2prism">GitHub</a>.<br /><br />The isochrones in the visualisations above are delivered through the <a href="https://developer.here.com/rest-apis/documentation/routing/topics/request-isoline.html">HERE API</a>. If you want to give it a try, they offer a free version. This project is not affiliated with HERE.<br /><br />The isolines from the visualisations above are exported below as geoJSONs, one Polygon for each line and additionally the search query, stored as a point with properties.</p>
+    <div class="explanations" id="export"><textarea></textarea></div>
+  </div>
+</div>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="https://npmcdn.com/@turf/turf/turf.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+  <script src="lib/three/three.min.js"></script>
+  <script src="lib/three/Detector.js"></script>
+  <script type="text/javascript">
+    var defaults = {
+      berlin:{
+        search:'Alexanderplatz, Berlin, Germany',
+        latitude:52.5214,
+        longitude:13.41555,
+        offset:2
+      },
+      london:{
+        search:'Piccadilly Circus, London, UK',
+        latitude:51.51008,
+        longitude:-0.13511,
+        offset:1
+      },
+      newyork:{
+        search:'Timesquare, New York, USA',
+        latitude:40.7569,
+        longitude:-73.9900399,
+        offset:-4
+      }
+    }
+
+    var days = {
+      mon:15,
+      tue:16,
+      wed:17,
+      thu:18,
+      fri:19,
+      sat:20,
+      son:21
+    }
+
+    var threed_state = true
+
+    d3.select('#threedmenu a').on('click', function(){
+        threed_state = !threed_state
+        d3.selectAll('#threedcontainer svg').classed('active',threed_state)
+    })
+
+    d3.selectAll('ul li a').on('click', function(){
+      d3.select('#msg').text('Please wait...')
+      d3.select('#btn-search').style('display','none')
+      d3.select('#search').attr('value',defaults[d3.select(this).attr('data-city')].search)
+      getIsoline(defaults[d3.select(this).attr('data-city')])
+    })
+
+    function formatTimeZone(t){
+      var st
+      if(t<0){
+        st = "-"
+      }else{
+        st = "%2B"
+      }
+      t = Math.abs(t)
+      if(t<10){
+        st += "0"+t
+      }else{
+        st += t
+      }
+      return st
+    }
+
+    var steps = 5, query, c_step, c_data, center, max, p_center, c_day, c_hour, c_ttype, svgs, c_time
+
+    function getIsoline(obj){
+      var day = document.getElementById('day')
+      c_day = day.options[day.selectedIndex].value
+
+      var hour = document.getElementById('hour')
+      c_hour = hour.options[hour.selectedIndex].value
+
+      var ttype = document.getElementById('transport-type')
+      c_ttype = ttype.options[ttype.selectedIndex].value
+
+      c_time = parseFloat(d3.select('#minutes').attr('value'))
+
+      //&singlecomponent=false&resolution=10&quality=3
+
+      query = "https://isoline.route.cit.api.here.com/routing/7.2/calculateisoline.json?app_id=LpORmPBDKz0oa7gPSYQH&app_code=lG6hn9AeJR05cP8SO1yURg&mode=fastest;"+c_ttype+";traffic:enabled&start=geo!"+obj.latitude+","+obj.longitude+"&rangetype=time&departure=2017-05-"+days[c_day]+"T"+c_hour+":00:00"+formatTimeZone(obj.offset)
+
+      c_step = 1
+      c_data = []
+      distances = []
+      d3.selectAll('#threedcontainer svg').remove()
+      svgs = []
+      max = 0
+      center = [obj.longitude, obj.latitude]
+      p_center = turf.point(center)
+
+      getData()
+    }
+
+    function getData(){      
+
+      var minutes = c_time*60 / steps * c_step
+
+      d3.json(query+"&range="+Math.round(minutes), function(err, data){
+        if(err) console.log(err)
+        
+        var poly = []
+        var dists = []
+
+        data.response.isoline[0].component[0].shape.forEach(function(d){
+          coord = d.split(',')
+          poly.push([parseFloat(coord[1]),parseFloat(coord[0])])
+          var dist = turf.distance(p_center, turf.point([parseFloat(coord[1]),parseFloat(coord[0])]))*1000
+          if(dist>max){
+            max = dist
+          }
+          dists.push(dist)
+        })
+
+        distances.push(dists)
+        c_data.push(poly.reverse())
+
+        c_step++
+
+        if(c_step<=steps){
+          getData()
+        }else{
+          visData()
+        }
+      })
+    }
+
+    var width = 500, height = 500, init_scale = 1000, distances = []
+
+    function visData(){
+      var p_data = turf.polygon([c_data[c_data.length-1]])
+
+      var projection = d3.geoMercator()
+        .center(center)
+        .scale(init_scale)
+        .translate([width / 2, height / 2])
+
+      var path = d3.geoPath()
+        .projection(projection)
+
+      var bounds = path.bounds(p_data),
+        dx = bounds[1][0] - bounds[0][0],
+        dy = bounds[1][1] - bounds[0][1],
+        scale = (init_scale/Math.max(dx / width, dy / height))*0.9;
+
+      projection = d3.geoMercator()
+        .center(center)
+        .scale(scale)
+        .translate([width / 2, height / 2])
+
+      path = d3.geoPath()
+        .projection(projection)
+
+      c_data.forEach(function(d,i){
+        var map_svg = d3.select('#threedcontainer').append('svg').attr('width',width).attr('height',height)
+          .attr('viewBox', '0 0 '+width+' '+height)
+          .attr('preserveAspectRatio', 'xMinYMin meet')
+          .classed('active',true)
+          .style('transform', 'translate3d(0,'+(30*i)+'px,0) rotateX(70deg)')
+
+        map_svg.append("path")
+          .attr('class','map')
+          .attr("d", path(turf.polygon([d])))
+
+        svgs.push(map_svg)
+      })
+
+      var s_center = projection(center)
+
+      var map_svg = d3.select('#threedcontainer').append('svg').attr('width',width).attr('height',height)
+        .attr('viewBox', '0 0 '+width+' '+height)
+        .attr('preserveAspectRatio', 'xMinYMin meet')
+        .classed('active',true)
+        .style('transform', 'translate3d(0,'+(30*-1)+'px,0) rotateX(70deg)')
+      map_svg.append('circle')
+        .attr('class', 'center')
+        .attr('r', '5')
+        .attr('cx', s_center[0])
+        .attr('cy', s_center[1])
+
+      svgs.push(map_svg)
+
+      var bins = [], bin_num = 20
+      c_data.forEach(function(d){
+        var bin = []
+        for(var i = 0; i<bin_num; i++){
+          bin.push(0)
+        }
+        bins.push(bin)
+      })
+
+      distances.forEach(function(d, i){
+        d.forEach(function(dd, ii){
+          bins[i][Math.round(dd/max*(bin_num-1))]++
+        })
+      })
+
+      bins.forEach(function(d){
+        var surplus = 0
+        for(var i = d.length-1; i>=0; i--){
+          d[i] = parseInt(d[i])+surplus
+          surplus = d[i]
+        }
+      })
+
+      var bin_svg = d3.select('#container').append('svg').attr('width',width).attr('height',height)
+        .attr('viewBox', '0 0 '+width+' '+height)
+        .attr('preserveAspectRatio', 'xMinYMin meet')
+        .append('g').attr('transform','translate('+(width/4)+','+(height/4)+')');
+
+      var x = d3.scaleLinear().domain([0,bin_num]).range([0,width/2]), 
+        y = d3.scaleLinear().domain([bins.length,0]).range([0,height/2]),
+        bin_width = (width/2)/bin_num,
+        bin_height = (height/2)/bins.length
+
+      bins.reverse()
+
+      var xAxis = d3.axisBottom().scale(d3.scaleLinear().domain([0,max/1000]).range([0,width/2])).ticks(bin_num/2),
+        yAxis = d3.axisLeft().scale(d3.scaleLinear().domain([0,c_time]).range([0,height/2])).ticks(bins.length)
+
+      bin_svg.append('g').attr('transform','translate(0,'+(height/2 + 5)+')').call(xAxis)
+      bin_svg.append('g').attr('transform','translate(-5,0)').call(yAxis)
+
+      bin_svg.append('text').text('Time (Minutes)').style('text-anchor','middle').attr('transform','rotate(-90) translate('+-(height/4)+',-40)')
+      bin_svg.append('text').text('Space (Kilometres)').style('text-anchor','middle').attr('transform','translate('+(width/4)+','+(height/2 + 40)+')')
+
+      bins.forEach(function(d,i){
+        var color_scale = d3.scaleLinear().domain([0,d3.max(d)]).range(['#ffffff','#000000'])
+        bin_svg.append('g').attr('transform','translate(0,'+y(i+1)+')').selectAll('rect').data(d).enter().append('rect')
+          .attr('x', function(dd,ii){
+            return x(ii)
+          })
+          .attr('y',0)
+          .attr('width',bin_width)
+          .attr('height',bin_height)
+          .style('fill', function(dd,ii){
+            return color_scale(dd)
+          })
+      })
+
+      var export_json = [turf.point(center)], map_json = []
+      export_json[0].properties['search'] = document.getElementById("search").value
+      export_json[0].properties['day'] = c_day
+      export_json[0].properties['hour'] = c_hour
+      export_json[0].properties['transport'] = c_ttype
+      export_json[0].properties['minutes'] = c_time
+
+      c_data.forEach(function(d, i){
+        export_json.push(turf.polygon([d]))
+        if(i == c_data.length-1){
+          map_json.push(turf.polygon([d]))
+        }
+      })
+
+      map_json.push(turf.point(center))
+
+      var map = L.map('map', {scrollWheelZoom: false}).setView([center[1],center[0]], 13);
+
+      var osmUrl='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+      var osmAttrib='Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
+      var osm = new L.TileLayer(osmUrl, {minZoom: 8, maxZoom: 12, attribution: osmAttrib});   
+      map.addLayer(osm);
+
+      L.geoJSON(map_json, {
+        pointToLayer: function (feature, latlng) {
+          return L.circleMarker(latlng, {
+            radius: 8,
+            fillColor: "#ff7800",
+            color: "#000",
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8
+          });
+        }
+      }).addTo(map);
+
+      var imageData = buildMesh(bins, bin_num)
+
+      var final_svg = d3.select('#final').append('svg').attr('width',width).attr('height',height)
+        .attr('viewBox', '0 0 '+width+' '+height)
+        .attr('preserveAspectRatio', 'xMinYMin meet');
+
+      final_svg.append('defs').append('pattern')
+        .attr('id','bg')
+        .attr('patternUnits','userSpaceOnUse')
+        .attr('width',50)
+        .attr('height',50)
+        .append('image')
+          .attr('xlink:href',imageData)
+          .attr('width',50)
+          .attr('height',50)
+          .attr('x',0)
+          .attr('y',0)
+
+      var g = final_svg.append('g').attr('transform','translate(250,250)')
+
+      var g_x_axis = d3.axisBottom().scale(d3.scaleLinear().domain([0,max*4/1000]).range([0,200])),
+        g_y_axis = d3.axisLeft  ().scale(d3.scaleLinear().domain([0,c_time*4]).range([0,200]))
+
+      g.append('g').attr('transform','translate(-100,100)')
+        .call(g_x_axis)
+
+      g.append('g').attr('transform','translate(-100,-100)')
+        .call(g_y_axis)
+
+      g.append('rect').style('fill', 'url(#bg)')
+        .attr('width',50)
+        .attr('height',50)
+        .attr('transform','rotate(180) scale(1,1)')
+
+      g.append('rect').style('fill', 'url(#bg)')
+        .attr('width',50)
+        .attr('height',50)
+        .attr('transform','rotate(180) scale(-1,1)')
+
+      g.append('rect').style('fill', 'url(#bg)')
+        .attr('width',50)
+        .attr('height',50)
+        .attr('transform','rotate(180) scale(1,-1)')
+
+      g.append('rect').style('fill', 'url(#bg)')
+        .attr('width',50)
+        .attr('height',50)
+        .attr('transform','rotate(180) scale(-1,-1)')
+
+      g.append('line').style('stroke','#000')
+        .attr('x1',0)
+        .attr('x2',0)
+        .attr('y1',-100)
+        .attr('y2',100)
+
+      g.append('text').text('Time (Minutes)').style('text-anchor','middle').attr('transform','rotate(-90) translate(0,-130)')
+      g.append('text').text('Space (Kilometres)').style('text-anchor','middle').attr('transform','translate(0,130)')
+
+      var car_bins = [[749,749,749,749,749,749,749,749,749,749,727,683,626,509,395,245,154,96,40,10],[518,518,518,518,518,518,518,496,449,409,342,260,178,106,43,11,3,0,0,0],[455,455,455,455,445,386,340,305,230,142,71,22,6,0,0,0,0,0,0,0],[255,255,246,198,164,128,95,43,10,0,0,0,0,0,0,0,0,0,0,0],[88,82,63,32,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
+        walk_bins = [[59,59,59,59,59,59,59,59,59,59,59,59,59,57,51,42,22,13,7,2],[46,46,46,46,46,46,46,45,43,43,41,34,30,22,10,0,0,0,0,0],[50,50,50,50,50,50,50,48,35,28,15,8,4,0,0,0,0,0,0,0],[23,23,23,23,23,17,13,8,0,0,0,0,0,0,0,0,0,0,0,0],[13,13,13,9,6,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
+
+      var car_imageData = buildMesh(car_bins, bin_num),
+        walk_imageData = buildMesh(walk_bins, bin_num)
+
+      var comp_svg = d3.select('#comparison').append('svg').attr('width',width).attr('height',height)
+        .attr('viewBox', '0 0 '+width+' '+height)
+        .attr('preserveAspectRatio', 'xMinYMin meet');
+
+      var defs = comp_svg.append('defs')
+
+      defs.append('pattern')
+        .attr('id','bg_car')
+        .attr('patternUnits','userSpaceOnUse')
+        .attr('width',50)
+        .attr('height',50)
+        .append('image')
+          .attr('xlink:href', car_imageData)
+          .attr('width',50)
+          .attr('height',50)
+          .attr('x',0)
+          .attr('y',0)
+
+      var car_max = 4839.049257677766
+        walk_max = 670.9673633979846
+
+      defs.append('pattern')
+        .attr('id','bg_walk')
+        .attr('patternUnits','userSpaceOnUse')
+        .attr('preserveAspectRatio','none')
+        .attr('width',50/car_max*walk_max)
+        .attr('height',50)
+        .append('image')
+          .attr('xlink:href',walk_imageData)
+          .attr('width',50)
+          .attr('height',50)
+          .attr('x',0)
+          .attr('y',0)
+
+      var g = comp_svg.append('g').attr('transform','translate(250,250)')
+
+      var g_x_axis = d3.axisBottom().scale(d3.scaleLinear().domain([0,Math.ceil(car_max*4/1000)]).range([0,200])),
+        g_y_axis = d3.axisLeft().scale(d3.scaleLinear().domain([0,10*4]).range([0,200]))
+
+      g.append('g').attr('transform','translate(-100,100)')
+        .call(g_x_axis)
+
+      g.append('g').attr('transform','translate(-100,-100)')
+        .call(g_y_axis)
+
+      var prism_car = g.append('g').attr('transform','translate(-35,0)')
+
+      prism_car.append('rect').style('fill', 'url(#bg_car)')
+        .attr('width',50)
+        .attr('height',50)
+        .attr('transform','rotate(180) scale(1,1)')
+
+      prism_car.append('rect').style('fill', 'url(#bg_car)')
+        .attr('width',50)
+        .attr('height',50)
+        .attr('transform','rotate(180) scale(-1,1)')
+
+      prism_car.append('rect').style('fill', 'url(#bg_car)')
+        .attr('width',50)
+        .attr('height',50)
+        .attr('transform','rotate(180) scale(1,-1)')
+
+      prism_car.append('rect').style('fill', 'url(#bg_car)')
+        .attr('width',50)
+        .attr('height',50)
+        .attr('transform','rotate(180) scale(-1,-1)')
+
+      prism_car.append('line').style('stroke','#000')
+        .attr('x1',0)
+        .attr('x2',0)
+        .attr('y1',-100)
+        .attr('y2',100)
+
+      var prism_walk = g.append('g').attr('transform','translate(35,0)')
+
+      prism_walk.append('rect').style('fill', 'url(#bg_walk)')
+        .attr('width',50/car_max*walk_max)
+        .attr('height',50)
+        .attr('transform','rotate(180) scale(1,1)')
+
+      prism_walk.append('rect').style('fill', 'url(#bg_walk)')
+        .attr('width',50/car_max*walk_max)
+        .attr('height',50)
+        .attr('transform','rotate(180) scale(-1,1)')
+
+      prism_walk.append('rect').style('fill', 'url(#bg_walk)')
+        .attr('width',50/car_max*walk_max)
+        .attr('height',50)
+        .attr('transform','rotate(180) scale(1,-1)')
+
+      prism_walk.append('rect').style('fill', 'url(#bg_walk)')
+        .attr('width',50/car_max*walk_max)
+        .attr('height',50)
+        .attr('transform','rotate(180) scale(-1,-1)')
+
+      prism_walk.append('line').style('stroke','#000')
+        .attr('x1',0)
+        .attr('x2',0)
+        .attr('y1',-100)
+        .attr('y2',100)
+
+      g.append('text').text('Time (Minutes)').style('text-anchor','middle').attr('transform','rotate(-90) translate(0,-130)')
+      g.append('text').text('Space (Kilometres)').style('text-anchor','middle').attr('transform','translate(0,130)')
+
+      d3.select('#export textarea').text(JSON.stringify(turf.featureCollection(export_json)))
+      d3.select('#msg').text('')
+      d3.selectAll('.explanations').style('display','block')
+    }
+
+    function buildMesh(bins, bin_num){
+      /* THREE.js */
+
+      if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+
+      var container = document.getElementById( 'threejs' );
+
+      var camera = new THREE.PerspectiveCamera( 20, 500 / 500, 1, 10000 );
+      camera.position.z = 1420;
+
+      var scene = new THREE.Scene();
+
+      var light = new THREE.DirectionalLight( 0xffffff );
+      light.position.set( 0, 0, 1 );
+      scene.add( light );
+
+      var geometry = new THREE.Geometry();
+      geometry.verticesNeedUpdate = true;
+
+      bins.reverse()
+
+      for(var i = -2; i<bins.length; i++){
+        if(i>=0){
+          var color_scale = d3.scaleLinear().domain([0,d3.max(bins[i])]).range([1,0])
+        }
+        for(var j = 0; j<bin_num+1; j++){
+          geometry.vertices.push(new THREE.Vector3( j/(bin_num)*500-250, (i+2)/(bins.length+1)*500-250, 0 ) );
+          var c = new THREE.Color( 0xffffff );
+          if(i == -2){
+            //keep white
+          }else if((i == -1 && j == 0) || (j == 0)){
+            c.setRGB(0,0,0);
+          }else if(i>=0 && j < bin_num){
+            c.setRGB(color_scale(bins[i][j]),color_scale(bins[i][j]),color_scale(bins[i][j]));
+          }
+          geometry.colors.push(c);
+        }
+      }
+
+      for(var i = 0; i<bins.length+1; i++){
+        for(var j = 0; j<bin_num; j++){
+          var v1 = i*(bin_num+1)+j,
+          v2 = i*(bin_num+1)+j+1,
+          v3 = (i+1)*(bin_num+1)+j+1
+          geometry.faces.push( new THREE.Face3( v1, v2, v3 ) )
+
+          v1 = i*(bin_num+1)+j
+          v2 = (i+1)*(bin_num+1)+j
+          v3 = (i+1)*(bin_num+1)+j+1
+          geometry.faces.push( new THREE.Face3( v1, v2, v3 ) )
+        }
+      }
+
+      var faceIndices = ['a', 'b', 'c'];
+
+      for ( var i = 0; i < geometry.faces.length; i++ ){
+        face = geometry.faces[ i ];
+        numberOfSides = ( face instanceof THREE.Face3 ) ? 3 : 4;
+        for( var j = 0; j < numberOfSides; j++ ){
+          vertexIndex = face[ faceIndices[ j ] ];
+          face.vertexColors[ j ] = geometry.colors[ vertexIndex ];
+        }
+      }
+
+      var mat = [
+        new THREE.MeshBasicMaterial({ vertexColors:THREE.VertexColors, side:THREE.DoubleSide })
+        //new THREE.MeshBasicMaterial( { color: 0x000000, shading: THREE.FlatShading, wireframe: true, transparent: true } )
+      ];
+
+      var triangles = THREE.SceneUtils.createMultiMaterialObject( geometry, mat );
+      scene.add(triangles);
+
+      renderer = new THREE.WebGLRenderer( { antialias: true } );
+      renderer.setClearColor( 0xffffff );
+      renderer.setPixelRatio( window.devicePixelRatio );
+      renderer.setSize(500, 500);
+      container.appendChild( renderer.domElement );
+
+      camera.lookAt( scene.position );
+      renderer.render( scene, camera );
+
+      return d3.select('canvas').node().toDataURL()
+    }
+
+    d3.select('#btn-search').on('click', function(){
+      d3.select('#msg').text('Please wait...')
+      d3.select('#btn-search').style('display','none')
+      d3.json("https://geocoder.cit.api.here.com/6.2/geocode.json?app_id=LpORmPBDKz0oa7gPSYQH&app_code=lG6hn9AeJR05cP8SO1yURg&gen=9&locationattributes=timeZone&searchtext="+encodeURI(document.getElementById("search").value), function(err, data){
+        if(err) console.log(err)
+        var pos = data.Response.View[0].Result[0].Location.DisplayPosition
+        getIsoline({latitude:pos.Latitude,longitude:pos.Longitude,offset:(data.Response.View[0].Result[0].Location.AdminInfo.TimeZone.offset/(60*60))})
+      })
+    })
+
+    //https://isoline.route.cit.api.here.com/routing/7.2/calculateisoline.json?app_id=LpORmPBDKz0oa7gPSYQH&app_code=lG6hn9AeJR05cP8SO1yURg&mode=shortest;car;traffic:enabled&start=geo!52.51578,13.37749&range=4000&rangetype=time&departure=2017-05-15T12:00:00+02
+    //https://geocoder.cit.api.here.com/6.2/geocode.json?app_id=LpORmPBDKz0oa7gPSYQH&app_code=lG6hn9AeJR05cP8SO1yURg&gen=9&searchtext=Fuldastr.+3+Berlin
+
+  </script>
+</body>
+</html>

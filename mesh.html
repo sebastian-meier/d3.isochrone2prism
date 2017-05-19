@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title></title>
+</head>
+<body>
+  <div id="threejs"></div>
+  <script src="lib/three/three.min.js"></script>
+  <script src="lib/three/Detector.js"></script>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script type="text/javascript">
+      /* THREE.js */
+
+      var bin_num = 20, bins = [[749,749,749,749,749,749,749,749,749,749,727,683,626,509,395,245,154,96,40,10],[518,518,518,518,518,518,518,496,449,409,342,260,178,106,43,11,3,0,0,0],[455,455,455,455,445,386,340,305,230,142,71,22,6,0,0,0,0,0,0,0],[255,255,246,198,164,128,95,43,10,0,0,0,0,0,0,0,0,0,0,0],[88,82,63,32,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]
+
+      if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+
+      var container = document.getElementById( 'threejs' );
+
+      var camera = new THREE.PerspectiveCamera( 20, 500 / 500, 1, 10000 );
+      camera.position.z = 1420;
+
+      var scene = new THREE.Scene();
+
+      var light = new THREE.DirectionalLight( 0xffffff );
+      light.position.set( 0, 0, 1 );
+      scene.add( light );
+
+      var canvas = document.createElement( 'canvas' );
+      canvas.width = 500;
+      canvas.height = 500;
+
+      var context = canvas.getContext( '2d' );
+
+      var geometry = new THREE.Geometry();
+      geometry.verticesNeedUpdate = true;
+
+      bins.reverse()
+
+      for(var i = -2; i<bins.length; i++){
+        if(i>=0){
+          var color_scale = d3.scaleLinear().domain([0,d3.max(bins[i])]).range([1,0])
+        }
+        for(var j = 0; j<bin_num+1; j++){
+          geometry.vertices.push(new THREE.Vector3( j/(bin_num)*500-250, (i+2)/(bins.length+1)*500-250, 0 ) );
+          var c = new THREE.Color( 0xffffff );
+          if(i == -2){
+            //keep white
+          }else if((i == -1 && j == 0) || (j == 0)){
+            c.setRGB(0,0,0);
+          }else if(i>=0 && j < bin_num){
+            c.setRGB(color_scale(bins[i][j]),color_scale(bins[i][j]),color_scale(bins[i][j]));
+          }
+          geometry.colors.push(c);
+        }
+      }
+
+      for(var i = 0; i<bins.length+1; i++){
+        for(var j = 0; j<bin_num; j++){
+          var v1 = i*(bin_num+1)+j,
+          v2 = i*(bin_num+1)+j+1,
+          v3 = (i+1)*(bin_num+1)+j+1
+          geometry.faces.push( new THREE.Face3( v1, v2, v3 ) )
+
+          v1 = i*(bin_num+1)+j
+          v2 = (i+1)*(bin_num+1)+j
+          v3 = (i+1)*(bin_num+1)+j+1
+          geometry.faces.push( new THREE.Face3( v1, v2, v3 ) )
+        }
+      }
+
+      var faceIndices = ['a', 'b', 'c'];
+
+      for ( var i = 0; i < geometry.faces.length; i++ ){
+        face = geometry.faces[ i ];
+        numberOfSides = ( face instanceof THREE.Face3 ) ? 3 : 4;
+        for( var j = 0; j < numberOfSides; j++ ){
+          vertexIndex = face[ faceIndices[ j ] ];
+          face.vertexColors[ j ] = geometry.colors[ vertexIndex ];
+        }
+      }
+
+      var mat = [
+        new THREE.MeshBasicMaterial({ vertexColors:THREE.VertexColors, side:THREE.DoubleSide }),
+        new THREE.MeshBasicMaterial( { color: 0x000000, shading: THREE.FlatShading, wireframe: true, transparent: true } )
+      ];
+
+      var triangles = THREE.SceneUtils.createMultiMaterialObject( geometry, mat );
+      scene.add(triangles);
+
+      renderer = new THREE.WebGLRenderer( { antialias: true } );
+      renderer.setClearColor( 0xffffff );
+      renderer.setPixelRatio( window.devicePixelRatio );
+      renderer.setSize(500, 500);
+      container.appendChild( renderer.domElement );
+
+      camera.lookAt( scene.position );
+      renderer.render( scene, camera );
+  </script>
+</body>
+</html>
